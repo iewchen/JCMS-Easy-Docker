@@ -1,0 +1,6 @@
+
+*.swp
+var/lib/mysql/**
+redis/log/*
+flask-jcmsui/tmp/*
+flask-jcmsui/config.json
