@@ -3,59 +3,61 @@ services:
 
     db:
         image: mysql:5.6
-        mem_limit: 128m
-        ports:
-            - 3306:3306
+        container_name: jcms_db
+        #mem_limit: 128m
+        #ports:
+        #    - 3306:3306
         environment:
             TZ: America/Chicago
-            MYSQL_ROOT_PASSWORD: IStillLoveMice
-            #MYSQL_DATABASE: jcms_db
-            #MYSQL_USER: jcms
-            #MYSQL_PASSWORD: IStillLoveMice
-
+            MYSQL_ROOT_PASSWORD: OfCourseIStillLoveMice
+            MYSQL_DATABASE: jcms_db
+            MYSQL_USER: jcms
+            MYSQL_PASSWORD: OfCourseIStillLoveMice
         volumes:
             - ./var/lib/mysql:/var/lib/mysql
             - ./mysql/etc/mysql:/etc/mysql
             - ./mysql/docker-entrypoint-initdb.d:/docker-entrypoint-initdb.d
 
+    redis:
+        image: redis:5.0-alpine
+        container_name: jcms_redis
+        mem_limit: 32m
+        volumes:
+            - ./redis/data:/data
+            - ./redis/etc:/usr/local/etc
+            - ./redis/log:/var/log/
+
+        command: ["redis-server", "/usr/local/etc/redis.conf"]
+
     java:
-        image: openjdk:8-jre-alpine
-        mem_limit: 736m
+        #image: openjdk:8-jre-alpine  # not working
+        image: openjdk:8-slim-buster
+        container_name: jcms_java
+        depends_on:
+            - db
+        #mem_limit: 736m
         ports:
             - 8080:8080
             - 8443:8443
         environment:
             TZ: America/Chicago
             JCMSWEB_DB_HOST: db:3306
-            #JCMSWEB_DB_USER: jcms
-            #JCMSWEB_DB_PASS: welovemice
+            JCMSWEB_DB_USER: jcms
+            JCMSWEB_DB_PASS: OfCourseIStillLoveMice
 
         volumes:
             - ./var/webapp/jcmsweb:/var/webapp/jcmsweb
 
         command: ["/var/webapp/jcmsweb/jcmsJboss/bin/run.sh", "-b", "0.0.0.0"]
 
-    flask-latex:
-        build: ./flask-jcmsui
+    jcmsui:
+        build: ./jcmsui
         mem_limit: 256m
         ports:
-            - 8001:8001
+            - 7001:7001
         environment:
             TZ: America/Chicago
 
         volumes:
-            - ./flask-jcmsui:/var/webapp/flask-jcmsui
-
-    redis:
-        image: redis:5.0-alpine
-        mem_limit: 32m
-        ports:
-            - 6379:6379
-        volumes:
-            - ./redis/data:/data
-            - ./redis/etc:/usr/local/etc
-            - ./redis/log:/var/log/
-        command:
-            - /usr/local/etc/redis.conf
-
-
+            - ./jcmsui:/var/webapp/jcmsui
+            - ./config.toml:/var/webapp/jcmsui/config.toml:ro
