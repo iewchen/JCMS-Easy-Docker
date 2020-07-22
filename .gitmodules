@@ -1,0 +1,3 @@
+[submodule "jcmsui"]
+	path = jcmsui
+	url = https://github.com/venklab/jcmsui.git
